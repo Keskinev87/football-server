@@ -8,7 +8,7 @@ const passport = require('passport')
 module.exports = {
   registerPost: (req, res) => {
     let reqUser = req.body
-    
+    //TODO: method deleteUser
     //Validations
 
     if (!reqUser.username || !reqUser.password || !reqUser.fullName) {
