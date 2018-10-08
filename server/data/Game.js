@@ -1,8 +1,9 @@
 const mongoose = require('mongoose')
 
-let competitionSchema = new mongoose.Schema({
+let gameSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    shareableUrl: { type: URL, required: false },
+    type: { type: String, required: true},
+    shareableUrl: { type: String, required: false },
     secretCode: { type: Number, required: false },
     leagues: { type: Array, required: false },
     matches: { type: Array, required: false },
