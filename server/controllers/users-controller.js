@@ -56,30 +56,25 @@ module.exports = {
   loginPost: (req, res) => {
     let user = req.body
     let successMsg = "Login Successfull!"
+    console.log("tuka sam")
     // let salt = encryption.generateSalt()
     // let hashedPassword = encryption.generateHashedPassword(salt, user.password)
     // user.password = hashedPassword
-    passport.authenticate('local', {session: false}, (err, user, info) => {
-      
-      if (err || !user) {
-          return res.status(401).json(
-              {error: "Wrong password/username. Please try again!"}
-          );
-      }
+    
      req.login(user, {session: false}, (err) => {
          if (err) {
              res.status(401).json({error: "Could not login. Please try again later!"});
          }
+         console.log(user)
          // generate a signed son web token with the contents of user object and return it in the response
-         const token = jwt.sign(user.toJSON(), 'your_jwt_secret');
-         return res.status(200).json({user : user, token: token, success: successMsg });
+         const token = jwt.sign(user, 'your_jwt_secret');
+         res.status(200).json({user : user, token: token, success: successMsg });
       });
-  })(req, res)
   },
   getUser: (req, res) => {
     console.log(req.user)
 
-    User.find().then(user => {
+    User.findOne({username: req.user.username}).then(user => {
       res.status(200).json(user)
     })
   },

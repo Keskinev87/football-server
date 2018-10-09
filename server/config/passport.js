@@ -11,17 +11,13 @@ passport.use(new JwtStrategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: 'your_jwt_secret'
   }, function(jwt_payload, done) {
-
-  User.findOne({id: jwt_payload.sub}, function(err, user) {
+  User.findOne({username: jwt_payload.username}, function(err, user) {
       if (err) {
-        console.log(err)
           return done(err, false);
       }
       if (user) {
-        console.log(user)
           return done(null, user);
       } else {
-        console.log("tuk")
           return done(null, false);
       }
   });
