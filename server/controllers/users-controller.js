@@ -54,22 +54,26 @@ module.exports = {
     
   },
   loginPost: (req, res) => {
-    let user = req.body
-    let successMsg = "Login Successfull!"
-    console.log("tuka sam")
-    // let salt = encryption.generateSalt()
-    // let hashedPassword = encryption.generateHashedPassword(salt, user.password)
-    // user.password = hashedPassword
+    let reqUser = req.body
     
-     req.login(user, {session: false}, (err) => {
-         if (err) {
-             res.status(401).json({error: "Could not login. Please try again later!"});
-         }
-         console.log(user)
-         // generate a signed son web token with the contents of user object and return it in the response
-         const token = jwt.sign(user, 'your_jwt_secret');
-         res.status(200).json({user : user, token: token, success: successMsg });
-      });
+    User.findOne({username: reqUser.username}).then(user => { //check if user exists
+      if (user) {
+        if (user.authenticate(reqUser.password)) { //check if password is ok
+          const token = jwt.sign(reqUser, 'your_jwt_secret');  //generate a token
+          res.status(200).json({success: "Login successfull!", token: token}) //send token to front-end
+        }
+        else {          
+          res.status(401).json({error: "Wrong password!"})  //the password doesn't match
+        }
+      } else {
+        res.status(404).json({error: "Wrong username"}) //the username doesn't match
+      }
+    }).catch(error => {
+      res.status(500).json({error: "Login failed. Please try again later!"}) //something wrong with the server
+    })
+    
+    
+     
   },
   getUser: (req, res) => {
     console.log(req.user)

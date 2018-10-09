@@ -18,13 +18,14 @@ module.exports = {
       let game = req.body //extract the game
       game.creator = req.user //set the game creator to be the current user
       //TODO: Add validations + check if user has 3 games. Every user will be limited to create a maximum of 3 games. Also - the games should be active. 
-      
+      console.log("Initial game:")
+      console.log(game)
       Game.findOne({name: game.name}).then(resGame => {
           if (resGame) {
               res.status(401).json({error: "Such game already exists. Please choose a different name!"})
           } else {
               Game.create(game).then(newGame => {
-                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame} },(err, user) =>{
+                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame._id} },(err, user) =>{
                       if(err) {
                           res.status(404).json({ error: "The game could not be saved. Please try to logout and login again" })
                       }
