@@ -11,8 +11,9 @@ require('./server/config/passport')()
 let updaters = require('./server/updaters/index')
 
 // var interval = setInterval(updaters.matches.getMatch, 10000);
-updaters.competitions.getCompetitions()
+// updaters.competitions.getCompetitions()
 
+// setTimeout(updaters.competitions.saveCompetition, 10000);
 
 app.listen(settings.port)
 console.log(`Server listening on port ${settings.port}...`)

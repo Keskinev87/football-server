@@ -15,7 +15,7 @@ module.exports = (app) => {
   app.post('/game/edit', passport.authenticate('jwt', {session: false}),  controllers.games.editGame)
   app.post('/matches/saveMatch', passport.authenticate('jwt', {session: false}), controllers.matches.saveMatch)
   app.post('/matches/getMatchesById',passport.authenticate('jwt', {session: false}), controllers.matches.getMatchesById)
-  app.get('/competitions/getAll', passport.authenticate('jwt', {session: false}), controllers.competitions.getAllCompetitions)
+  app.get('/competitions/getAll', controllers.competitions.getAllCompetitions)
   app.post('/competitions/saveCompetition', passport.authenticate('jwt', {session: false}), controllers.competitions.saveCompetition)
   app.post('/competitions/getCompetitionById', passport.authenticate('jwt', {session: false}), controllers.competitions.getCompetitionsById)
 
