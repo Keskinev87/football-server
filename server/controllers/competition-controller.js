@@ -19,11 +19,11 @@ module.exports = {
       Competition.findOne({id: newCompetition.id}).then(competition => {
          
         if (competition) {
-              res.send('Competition already exists')
+              res.status(401).json({error: 'Competition already exists'})
           }
           else {
             Competition.create(newCompetition, (err) => {
-                if (err) res.status(500).send(err)
+                if (err) res.status(500).json({error: "The game could not be created. Please try again later!"})
                 else res.status(200).send('Competition Saved')
             })
             }

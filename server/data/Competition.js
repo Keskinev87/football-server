@@ -5,7 +5,7 @@ let competitionSchema = new mongoose.Schema({
     id: { type:Number, required: true },
     area: {type: Object, required: true },
     name: { type: String, required: true},
-    code: { type: Number, required: true},
+    code: { type: String, required: true},
     plan: { type: String, required: true},
     currentSeason: { type: Object, required: true },
     seasons: { type: Array, required: false },
