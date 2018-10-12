@@ -2,7 +2,7 @@ const http = require('http')
 const Competition = require('../data/Competition')
 
 module.exports = {
-    getCompetitions: function() {
+    updateCompetitions: function() {
         let apiToken = 'f8a83daa19804e2a966103601127b9b5'
         let options = {
             host: 'api.football-data.org',
@@ -35,7 +35,7 @@ module.exports = {
         });
 
     },
-    saveCompetition: function() {
+    getAndSaveCompetitions: function() {
         let apiToken = 'f8a83daa19804e2a966103601127b9b5'
         let availableCompetitions = [2013, 2016, 2021, 2001, 2018, 2015, 2002, 2019, 2003, 2017, 2014, 2000]
         availableCompetitions.forEach((element) => {
