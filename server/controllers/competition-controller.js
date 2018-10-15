@@ -16,7 +16,7 @@ module.exports = {
     saveCompetition: (req, res) => {
       let newCompetition = new Competition(req.body);
 
-      Competition.findOne({id: newCompetition.id}).then(competition => {
+      Competition.findOne({_id: newCompetition.id}).then(competition => {
          
         if (competition) {
               res.status(401).json({error: 'Competition already exists'})

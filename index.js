@@ -12,8 +12,8 @@ let updaters = require('./server/updaters/index')
 
 // var interval = setInterval(updaters.matches.getMatch, 10000);
 // setTimeout(updaters.competitions.saveCompetition, 10000);
-
-// updaters.competitions.getAndSaveCompetitions() - Run to fill the database with competitions
+// - Run to fill the database with competitions
+// updaters.competitions.getAndSaveCompetitions() 
 // updaters.matches.getAndSaveMatches() - Run to fill the database with matches
 
 app.listen(settings.port)
