@@ -9,6 +9,7 @@ let gameSchema = new mongoose.Schema({
     competitions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Competition', required: false }],
     matches: { type: Array, required: false },
     creator:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    dateCreated: { type: Date, required: true},
     description: { type: String, required: false },
     admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }]

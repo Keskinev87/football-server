@@ -1,5 +1,7 @@
 const Game = require('../data/Game')
 const User = require('../data/User')
+const moment = require('moment')
+const Prediction = require('../data/Prediction')
 
 module.exports = {
     joinGameWithCode: (req, res) => {
@@ -60,6 +62,7 @@ module.exports = {
       let game = req.body //extract the game
       game.creator = req.user._id //set the game creator to be the current user
       game.admin = req.user._id //the user who creates the game is also admin. Admin can be changed in some cases. 
+      game.dateCreated = new moment()
 
 
       //TODO: Add validations + check if user has 3 games. Every user will be limited to create a maximum of 3 games. Also - the games should be active. 
@@ -161,9 +164,23 @@ module.exports = {
             }
         })
 
+    },
+    makePrediction: (req, res) => {
         
+        let gameId = req.body.game.gameId
+        let prediction = req.body.preditction
 
-        
+        Game.findOneAndUpdate({_id: gameId}, {$push: {'users': prediction}}, (err, game) => {
+            if(err) {
+                res.status(500).json({error: "Server not available. Please try again later."})
+            }
+            else if(!game) {
+                res.status(404).json({error: "No such game found!"})
+            }
+            else {
+                res.status(200).json({success: "Prediction saved!"})
+            }
+        })
     },
     deleteGame: (req, res) => {
 
