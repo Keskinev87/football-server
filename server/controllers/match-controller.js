@@ -9,7 +9,7 @@ module.exports = {
       })
 
     },
-    getMatchesOfGame: (req, res) => {
+    getByGameId: (req, res) => {
 
         let gameId = req.body.gameId
 
@@ -19,10 +19,10 @@ module.exports = {
                 res.status(404).json({error: "No game was found!"})
             }
             else {
-                Matches
+                res.status(200).json(game.matches)
             }
         })
-        
+
     },
     getByCompetitionId: (req, res) => {
 
@@ -40,7 +40,7 @@ module.exports = {
             res.status(500).json({error: "Server error. Please try again later!"})
         })
     },
-    getMatchesById: (req, res) => {
+    getById: (req, res) => {
 
         let matchIds = req.body.matchIds
 
