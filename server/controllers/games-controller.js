@@ -114,18 +114,18 @@ module.exports = {
         })
 
     },
-    addMatches: (req, res) => {
+    addMatchesWithId: (req, res) => {
 
         let reqGameId = req.body.gameId
         let matches = req.body.matches
         
 
         //TODO: There should be a check if the game is a certain type. Only certain games will allow adding custom matches. 
-        Game.findOneAndUpdate({_id: reqGameId, admin: req.user}, {$set: {matches: matches}}, (err, match) => {
+        Game.findOneAndUpdate({_id: reqGameId, admin: req.user}, {$set: {matches: matches}}, (err, game) => {
             if(err) {
                 res.status(404).json({ error: "Game could not be updated!"})
             }
-            else if (!match) {
+            else if (!game) {
                 res.status(404).json({ error: "Game not found!" })
             }
             else {
@@ -134,6 +134,36 @@ module.exports = {
             }
         })
 
+    },
+    addMatchesWithCompetition: (req, res) => {
+
+        let competitionIds = req.body.competitions
+        let gameId = req.body._id
+        
+
+        Match.find({'competition.id': {$in: competitionIds }}).then((matches) => {
+            if(!matches){
+                res.status(404).json({error: "No matches found!"})
+            } 
+            else {
+                Game.findOneAndUpdate({_id: gameId, admin: req.user}, {$set: {matches: matches}}, (err, game) => {
+                    if(err) {
+                        res.status(404).json({ error: "Game could not be updated!"})
+                    }
+                    else if (!match) {
+                        res.status(404).json({ error: "Game not found!" })
+                    }
+                    else {
+                        // res.status(200).json({success: "Game updated successfully!"})
+                        res.status(200).json(game)
+                    }
+                })
+            }
+        })
+
+        
+
+        
     },
     deleteGame: (req, res) => {
 
