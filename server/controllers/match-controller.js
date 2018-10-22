@@ -42,10 +42,10 @@ module.exports = {
     },
     getById: (req, res) => {
 
-        let matchIds = req.body.matchIds
+        let matchIdArr = req.body.matchIdArr
 
 
-        Match.find({ id: { $in: matchIds} }, (err, matches) => {
+        Match.find({ id: { $in: matchIdArr} }, (err, matches) => {
             if (err) res.status(500).send(err);
             else res.status(200).send(matches);
         })
