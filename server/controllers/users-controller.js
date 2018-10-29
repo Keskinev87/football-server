@@ -59,7 +59,7 @@ module.exports = {
     User.findOne({username: reqUser.username}).then(user => { //check if user exists
       if (user) {
         if (user.authenticate(reqUser.password)) { //check if password is ok
-          const token = jwt.sign(reqUser, 'your_jwt_secret');  //generate a token
+          const token = jwt.sign(reqUser, 'Ma_secret');  //generate a token
           res.status(200).json({success: "Login successfull!", token: token}) //send token to front-end
         }
         else {          
