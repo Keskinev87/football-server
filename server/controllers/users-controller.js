@@ -8,7 +8,6 @@ const passport = require('passport')
 module.exports = {
   registerPost: (req, res) => {
     let reqUser = req.body
-    console.log(reqUser)
     //TODO: method deleteUser
     //Validations:
 
@@ -59,8 +58,9 @@ module.exports = {
     User.findOne({username: reqUser.username}).then(user => { //check if user exists
       if (user) {
         if (user.authenticate(reqUser.password)) { //check if password is ok
-          const token = jwt.sign(reqUser, 'Ma_secret');  //generate a token
+          const token = jwt.sign(reqUser, 'secret');  //generate a token
           res.status(200).json({success: "Login successfull!", token: token}) //send token to front-end
+          console.log(token)
         }
         else {          
           res.status(401).json({error: "Wrong password!"})  //the password doesn't match

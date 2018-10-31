@@ -71,9 +71,9 @@ module.exports = {
 
     },
     createGame: (req, res) => {
-
       let game = req.body //extract the game
-      game.creator = req.user._id //set the game creator to be the current user
+      game.creator = req.user._id 
+      //set the game creator to be the current user
       game.admin = req.user._id //the user who creates the game is also admin. Admin can be changed in some cases. 
       game.dateCreated = new moment()
 
