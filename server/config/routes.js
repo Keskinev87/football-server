@@ -9,6 +9,7 @@ module.exports = (app) => {
   app.post('/user/register', controllers.users.registerPost)
   app.get('/user/get', passport.authenticate('jwt', {session: false}), controllers.users.getUser)
   app.post('/users/logout', controllers.users.logout)
+  app.post('/game/getAll', passport.authenticate('jwt', {seesion:false}), controllers.games.getGamesByParticipant)
   app.post('/game/joinWithCode', passport.authenticate('jwt', {session: false}), controllers.games.joinGameWithCode)
   app.post('/game/makePrediction', passport.authenticate('jwt', {session: false}), controllers.games.makePrediction)
   app.get('/game/getByCreator', passport.authenticate('jwt', {session: false}), controllers.games.getGameByCreator)

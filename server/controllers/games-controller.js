@@ -31,6 +31,19 @@ module.exports = {
         })
 
     },
+    getGamesByParticipant: (req, res) => {
+
+        let games = req.user.games
+        Game.find({_id:{$in : games}}).then(games =>{
+            if(games === undefined) {
+                res.status(204)
+            } else {
+                res.status(200).json(games)
+            }
+        }).catch(error => {
+            res.status(500)
+        })
+    },
     getGameByCreator: (req, res) => {
 
        Game.find({creator: req.user._id}).then(resGame => {
