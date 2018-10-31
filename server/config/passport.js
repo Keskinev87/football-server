@@ -7,8 +7,8 @@ const User = require('mongoose').model('User')
 module.exports = () => {
 
 passport.use(new JwtStrategy({
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: 'your_jwt_secret'
+    jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('JWT'),
+    secretOrKey: 'secret'
   }, function(jwt_payload, done) {
   User.findOne({username: jwt_payload.username}, function(err, user) {
       if (err) {
