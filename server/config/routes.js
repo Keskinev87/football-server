@@ -9,7 +9,7 @@ module.exports = (app) => {
   app.post('/user/register', controllers.users.registerPost)
   app.get('/user/get', passport.authenticate('jwt', {session: false}), controllers.users.getUser)
   app.post('/users/logout', controllers.users.logout)
-  app.post('/game/getAll', passport.authenticate('jwt', {seesion:false}), controllers.games.getGamesByParticipant)
+  app.get('/game/getAll', passport.authenticate('jwt', {session:false}), controllers.games.getGamesByParticipant)
   app.post('/game/joinWithCode', passport.authenticate('jwt', {session: false}), controllers.games.joinGameWithCode)
   app.post('/game/makePrediction', passport.authenticate('jwt', {session: false}), controllers.games.makePrediction)
   app.get('/game/getByCreator', passport.authenticate('jwt', {session: false}), controllers.games.getGameByCreator)
@@ -23,7 +23,7 @@ module.exports = (app) => {
   app.post('/matches/getByCompetitionId', passport.authenticate('jwt', {session: false}), controllers.matches.getByCompetitionId)
   app.post('/matches/getById',passport.authenticate('jwt', {session: false}), controllers.matches.getById)
   app.post('/matches/saveMatch', passport.authenticate('jwt', {session: false}), controllers.matches.saveMatch)
-  app.get('/competitions/getAll', controllers.competitions.getAllCompetitions)
+  app.get('/competitions/getAll', passport.authenticate('jwt', {session: false}), controllers.competitions.getAllCompetitions)
   app.post('/competitions/saveCompetition', passport.authenticate('jwt', {session: false}), controllers.competitions.saveCompetition)
   app.post('/competitions/getCompetitionById', passport.authenticate('jwt', {session: false}), controllers.competitions.getCompetitionsById)
 

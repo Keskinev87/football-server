@@ -32,13 +32,17 @@ module.exports = {
 
     },
     getGamesByParticipant: (req, res) => {
+        console.log("User:")
+        console.log(req.user)
+        let reqGames = req.user.games
 
-        let games = req.user.games
-        Game.find({_id:{$in : games}}).then(games =>{
+        Game.find({_id:{$in : reqGames}}).then(games =>{
             if(games === undefined) {
                 res.status(204)
             } else {
                 res.status(200).json(games)
+                console.log("Res Game")
+                console.log(games)
             }
         }).catch(error => {
             res.status(500)
