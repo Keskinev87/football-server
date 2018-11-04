@@ -41,7 +41,7 @@ module.exports = {
                 res.status(204)
             } else {
                 res.status(200).json(games)
-                console.log("Res Game")
+                console.log("Res Game") 
                 console.log(games)
             }
         }).catch(error => {
@@ -99,7 +99,7 @@ module.exports = {
                           res.status(404).json({error: "User was not found!"})
                       } 
                       else {
-                        res.status(200).json({success: "Game created successfully!"})
+                        res.status(200).json(newGame)
                       }
                   })
                   
@@ -114,8 +114,8 @@ module.exports = {
 
     },
     addCompetitions: (req, res) => {
-
-        let reqGameId = req.body.gameId
+        console.log("Add competitions: " + req.game)
+        let reqGameId = req.body._id
         let competitions = req.body.competitions
         
 

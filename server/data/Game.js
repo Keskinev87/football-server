@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 
 let gameSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    type: { type: String, required: true},
+    type: { type: String, required: false},
     shareableUrl: { type: String, required: false },
     secretCode: { type: Number, required: false },
     competitions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Competition', required: false }],
