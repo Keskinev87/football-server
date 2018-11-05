@@ -1,5 +1,6 @@
 const Match = require('../data/Match')
 const Game = require('../data/Game')
+const User = require('../data/User')
 
 module.exports = {
     getAllMatches: (req, res) => {
@@ -25,20 +26,30 @@ module.exports = {
 
     },
     getByCompetitionId: (req, res) => {
-
-        let competitionIds = req.body.competitionIds
-
-
-        Match.find({'competition.id': {$in: competitionIds }}).then((matches) => {
-            if (!matches) {
-                res.status(404).json({error: "No matches found for this competition"})
+        console.log("Get Matches")
+        let userId = req.user._id
+        console.log(req.user)
+        User.find({_id: userId}).then((user) => {
+            let competitionIds = []
+            for (let game of user.games) {
+                competitionIds.concat(game.competitionIds)
             }
-            else {
-                res.status(200).json(matches)
-            }
+            Match.find({'competition.id': {$in: competitionIds }}).then((matches) => {
+                if (!matches) {
+                    res.status(404).json({error: "No matches found for this competition"})
+                }
+                else {
+                    res.status(200).json(matches)
+                }
+            }).catch((error) => {
+                res.status(500).json({error: "Server error. Please try again later!"})
+            })
         }).catch((error) => {
-            res.status(500).json({error: "Server error. Please try again later!"})
+            res.status(500).json({error: "Server error finding the user"})
         })
+
+
+        
     },
     getById: (req, res) => {
 

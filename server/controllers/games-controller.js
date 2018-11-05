@@ -32,17 +32,14 @@ module.exports = {
 
     },
     getGamesByParticipant: (req, res) => {
-        console.log("User:")
-        console.log(req.user)
         let reqGames = req.user.games
-
-        Game.find({_id:{$in : reqGames}}).then(games =>{
+        console.log("get Games")
+        console.log(req.user)
+        Game.find({_id:{$in : reqGames._id}}).then(games =>{
             if(games === undefined) {
                 res.status(204)
             } else {
                 res.status(200).json(games)
-                console.log("Res Game") 
-                console.log(games)
             }
         }).catch(error => {
             res.status(500)
@@ -91,7 +88,7 @@ module.exports = {
               res.status(401).json({error: "Such game already exists. Please choose a different name!"})
           } else {
               Game.create(game).then(newGame => {
-                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame._id} },(err, user) =>{
+                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame} },(err, user) =>{
                       if(err) {
                           res.status(500).json({ error: "The game could not be saved. Please try to logout and login again" })
                       }
@@ -114,10 +111,10 @@ module.exports = {
 
     },
     addCompetitions: (req, res) => {
-        console.log("Add competitions: " + req.game)
+        console.log("Add competitions: " + req.body)
         let reqGameId = req.body._id
         let competitions = req.body.competitions
-        
+        console.log(req.body)
 
         Game.findOneAndUpdate({_id: reqGameId, admin: req.user._id}, {$set: {competitions: competitions}}, (err, game) => {
             if(err) {
