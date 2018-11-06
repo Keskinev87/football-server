@@ -32,16 +32,20 @@ module.exports = {
 
     },
     getGamesByParticipant: (req, res) => {
-        let reqGames = req.user.games
-        console.log("get Games")
-        console.log(req.user)
-        Game.find({_id:{$in : reqGames._id}}).then(games =>{
+        let reqGamesIds = []
+        for (let game of req.user.games) {
+            reqGamesIds.push(game._id)
+        }
+        
+        Game.find({_id:{$in : reqGamesIds}}).then(games =>{
             if(games === undefined) {
                 res.status(204)
             } else {
+                console.log("Got games")
                 res.status(200).json(games)
             }
         }).catch(error => {
+            console.log(error)
             res.status(500)
         })
     },
@@ -79,16 +83,14 @@ module.exports = {
       game.dateCreated = new moment()
 
 
-      //TODO: Add validations + check if user has 3 games. Every user will be limited to create a maximum of 3 games. Also - the games should be active. 
-      console.log("Initial game:")
-      console.log(game)
+      //TODO: Add validations + check if user has 3 games. Every user will be limited to create a maximum of 3 games. Also - the games should be active.
       //check if the game already exists. Condition is: the admin is this user and the name is the same
       Game.findOne({admin: req.user} && {name: game.name}).then(resGame => {
           if (resGame) {
               res.status(401).json({error: "Such game already exists. Please choose a different name!"})
           } else {
               Game.create(game).then(newGame => {
-                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame} },(err, user) =>{
+                  User.findOneAndUpdate({_id: req.user._id}, { $push: { 'games': newGame._id} },(err, user) =>{
                       if(err) {
                           res.status(500).json({ error: "The game could not be saved. Please try to logout and login again" })
                       }
@@ -111,12 +113,13 @@ module.exports = {
 
     },
     addCompetitions: (req, res) => {
-        console.log("Add competitions: " + req.body)
+        
         let reqGameId = req.body._id
+       
         let competitions = req.body.competitions
-        console.log(req.body)
+        console.log(competitions)
 
-        Game.findOneAndUpdate({_id: reqGameId, admin: req.user._id}, {$set: {competitions: competitions}}, (err, game) => {
+        Game.findOneAndUpdate({_id: reqGameId, admin: req.user._id}, {$set: {"competitions": competitions}}, {new: true}, (err, game) => {
             if(err) {
                 console.log(err)
                 res.status(404).json({ error: "Game could not be updated!"})
@@ -125,8 +128,24 @@ module.exports = {
                 res.status(404).json({error: "Not found!"})
             }
             else {
+                console.log(game)
                 // res.status(200).json({success: "Game updated successfully!"})
-                res.status(200).json(game)
+                User.update({_id:req.user._id}, {
+                    $set: {
+                        'games.$[i].competitions': game.competitions
+                    }
+                },
+                {
+                    arrayFilters: [
+                        {
+                            "i._id": game._id 
+                        }]
+                }).then(user => {
+                    console.log(user)
+                    res.status(200).json(user, game)
+                }).catch(error => {
+                    res.status(500).json({error: "User not updated"})
+                })
             }
         })
 

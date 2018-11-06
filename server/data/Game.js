@@ -6,7 +6,7 @@ let gameSchema = new mongoose.Schema({
     type: { type: String, required: false},
     shareableUrl: { type: String, required: false },
     secretCode: { type: Number, required: false },
-    competitions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Competition', required: false }],
+    competitions: {type: Array, required: false },
     matches: { type: Array, required: false },
     creator:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     dateCreated: { type: Date, required: true},
