@@ -8,7 +8,8 @@ let userSchema = new mongoose.Schema({
   games: { type: Array, required: false },
   salt: String,
   hashedPass: String,
-  roles: [String]
+  roles: [String],
+  dateCreated: { type: Date, required: true }
 })
 
 userSchema.method({

@@ -6,29 +6,34 @@ const Prediction = require('../data/Prediction')
 module.exports = {
     joinGameWithCode: (req, res) => {
         
-        let secretCode = req.body.secretCode
-        let userId = req.user._id
+       let secretCode = req.body.gameCode
+       console.log("Secret code is:" + secretCode)
+       let userGameIds = req.user.games
+       Game.findOne({secretCode: secretCode}).then(game => {
+           
+           var userHasTheGame = false
+           for (let i = 0; i < userGameIds.length; i++) {
+                if (userGameIds[i].toString() == game._id.toString()) {
+                    userHasTheGame = true
+                }
+                console.log(userHasTheGame)
+           }
+           console.log("Var is: " + userHasTheGame)
+           if(userHasTheGame) {
+               res.status(401).json({error: "You already participate in that game!"})
+           } else {
+               res.status(200).json(game)
+           }
+       })
+       .catch(error => {
+           res.status(500).json({error: error})
+       })
 
+        
+        
 
         //TODO: Make sure that the secret code of every game is unique since this is the only thing the game is searched by. 
-        Game.findOneAndUpdate({secretCode: secretCode}, {$push: {users: userId} }, (err, game) => {
-            if(!game) {
-                res.status(404).json({error: "Game was not found!"})
-            } 
-            else if(err){
-                res.status(500).json({error: "Service not available. Please try again later!"})
-            }
-            else {
-                User.findOneAndUpdate({_id: userId}, { $push: {games: game._id}}, (err, resUser) => {
-                    if (err){
-                        res.status(404).json({error: "Error! Please report the problem to support!"})
-                    }
-                    else {
-                        res.status(200).json({success: "You joined the game successfully!"})
-                    }
-                })
-            }
-        })
+        
 
     },
     getGamesByParticipant: (req, res) => {
@@ -129,23 +134,7 @@ module.exports = {
             }
             else {
                 console.log(game)
-                // res.status(200).json({success: "Game updated successfully!"})
-                User.update({_id:req.user._id}, {
-                    $set: {
-                        'games.$[i].competitions': game.competitions
-                    }
-                },
-                {
-                    arrayFilters: [
-                        {
-                            "i._id": game._id 
-                        }]
-                }).then(user => {
-                    console.log(user)
-                    res.status(200).json(user, game)
-                }).catch(error => {
-                    res.status(500).json({error: "User not updated"})
-                })
+                res.status(200).json(game)
             }
         })
 

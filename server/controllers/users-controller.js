@@ -1,6 +1,6 @@
 const encryption = require('../utilities/encryption')
 const User = require('mongoose').model('User')
-
+const moment = require('moment')
 
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
@@ -28,11 +28,13 @@ module.exports = {
         else {
           let salt = encryption.generateSalt()
           let hashedPassword = encryption.generateHashedPassword(salt, reqUser.password)
+          let dateCreated = new moment()
           User.create({
             username: reqUser.username,
             fullName: reqUser.fullName,
             salt: salt,
-            hashedPass: hashedPassword
+            hashedPass: hashedPassword,
+            dateCreated: dateCreated
           }).then( resUser => {
             console.log("Result")
             console.log(resUser)
