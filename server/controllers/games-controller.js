@@ -187,23 +187,7 @@ module.exports = {
         })
 
     },
-    makePrediction: (req, res) => {
-        
-        let gameId = req.body.game.gameId
-        let prediction = req.body.preditction
-
-        Game.findOneAndUpdate({_id: gameId}, {$push: {'users': prediction}}, (err, game) => {
-            if(err) {
-                res.status(500).json({error: "Server not available. Please try again later."})
-            }
-            else if(!game) {
-                res.status(404).json({error: "No such game found!"})
-            }
-            else {
-                res.status(200).json({success: "Prediction saved!"})
-            }
-        })
-    },
+    
     deleteGame: (req, res) => {
 
         //TODO: this should send e-mail if users are playing the game. They have to confirm, that they agree to the deletion. 
