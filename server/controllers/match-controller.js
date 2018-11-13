@@ -28,12 +28,24 @@ module.exports = {
     getByCompetitionId: (req, res) => {
         console.log(req.body)
         let competitionIds = req.body
+        let yesterday = new Date()
+        yesterday.setDate(new Date().getDate() - 1)
+        yesterday = yesterday.getTime()
+        console.log(yesterday)
 
-        Match.find({'competition.id': {$in: competitionIds}}).then(matches => {
+        let theDayAfterTomorrow = new Date()
+        theDayAfterTomorrow.setDate(new Date().getDate() + 2) 
+        theDayAfterTomorrow = theDayAfterTomorrow.getTime()
+        console.log(theDayAfterTomorrow)
+
+        
+
+        Match.find({'competition.id': {$in: competitionIds}} && {'dateMiliseconds':{$gt: yesterday}} && {'dateMiliseconds': {$lt: theDayAfterTomorrow}}).then(matches => {
             if(!matches) {
                 res.status(404).json({error: "No matches found"})
             }
             else {
+                console.log(matches[0].utcDate.getTime())
                 res.status(200).json(matches)
             }
         }).catch(error => {
