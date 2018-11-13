@@ -16,7 +16,8 @@ let matchSchema = new mongoose.Schema({
     referees: { type: Array, required: false},
     goals: { type: Array, required: false },
     bookings: { type: Array, required: false },
-    substitutions: { type: Array, required: false}
+    substitutions: { type: Array, required: false},
+    dateMiliseconds: { type: Number, required: false}
   })
 
   let Match = mongoose.model('Match', matchSchema)
