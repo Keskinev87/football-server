@@ -187,6 +187,22 @@ module.exports = {
         })
 
     },
+    saveGameRules: (req, res) => {
+        let gameId = req.body._id
+        let rules = req.body.scoreRules
+        Game.findOneAndUpdate({_id: gameId}, {$set: {scoreRules: rules}}, {new: true}, (err, game) => {
+            if(err) {
+                res.status(500)
+            } 
+            else if (!game) {
+                res.status(404)
+            }
+            else {
+                res.status(200).json(game)
+            }
+
+        })
+    },
     
     deleteGame: (req, res) => {
 

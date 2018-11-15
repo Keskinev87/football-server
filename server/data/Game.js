@@ -11,6 +11,7 @@ let gameSchema = new mongoose.Schema({
     creator:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     dateCreated: { type: Date, required: true},
     description: { type: String, required: false },
+    scoreRules: { type: Object, required: false},
     admin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }]
 })
