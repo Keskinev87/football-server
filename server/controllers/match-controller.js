@@ -88,6 +88,23 @@ module.exports = {
         })
 
     },
+    getMatchesbyDate: (req, res) => {
+        let today = new Date().getTime()
+        let tomorrowsDate = new Date()
+        tomorrowsDate = tomorrowsDate.setDate(new Date().getDate() + 4)
+        console.log(tomorrowsDate)
+        console.log(typeof(tomorrowsDate))
+
+        Match.find({dateMiliseconds : {$gt: today}} && {dateMiliseconds : {$lt : tomorrowsDate}}).then(matches => {
+            if(!matches) {
+                res.status(404)
+            }
+            else
+                res.status(200).json(matches)
+        }).catch(error => {
+            res.status(500)
+        })
+    },
     saveMatch: (req, res) => {
 
       let newMatch = new Match(req.body);

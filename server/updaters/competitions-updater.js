@@ -2,6 +2,7 @@ const http = require('http')
 const Competition = require('../data/Competition')
 
 module.exports = {
+   
     updateCompetitions: function() {
         let apiToken = 'f8a83daa19804e2a966103601127b9b5'
         let options = {

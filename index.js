@@ -1,9 +1,15 @@
 let env = process.env.NODE_ENV || 'development'
-
+let cron = require('node-cron')
 let settings = require('./server/config/settings')[env]
 
 const app = require('express')()
-// let updaters = require('./server/updaters/index')
+
+
+let updaters = require('./server/updaters/index')
+
+// updaters.matches.updateMatchLive()
+updaters.matches.updateMatchesForTheWeek()
+updaters.matches.getMatchesForToday()
 
 require('./server/config/database')(settings)
 require('./server/config/express')(app)
@@ -16,6 +22,8 @@ require('./server/config/passport')()
 // - Run to fill the database with competitions
 // updaters.competitions.getAndSaveCompetitions() 
 // updaters.matches.getAndSaveMatches()  - Run to fill the database with matches
+
+
 
 app.listen(settings.port)
 console.log(`Server listening on port ${settings.port}...`)

@@ -1,40 +1,10 @@
 let moment = require('moment')
 let http = require('http')
 let Match = require('../data/Match')
+let cron = require('node-cron')
 
 module.exports = {
-    updateMatches: function() {
-        let apiToken = 'f8a83daa19804e2a966103601127b9b5'
-        let options = {
-            host: 'api.football-data.org',
-            path: '/v2/competitions',
-            headers: {
-                'X-Auth-Token': apiToken,
-                'Content-Type': 'application/json'
-            }
-        }
-        http.get(options, (response) => {
-            let data =''
-
-            response.on('error', function() {
-                console.log("error")
-            })
-            response.on('data', function (chunk) {
-                data += chunk
-            });
-            response.on('end', function() {
-                let allCompetitions = JSON.parse(data).competitions
-                let availableCompetitions = []
-                allCompetitions.forEach(element => {
-                    if (element.plan == "TIER_ONE") {
-                        availableCompetitions.push(element.id)
-                    }
-                });
-                
-            })
-            
-        });
-    },
+  
     getAndSaveMatches: function() {
         let apiToken = 'f8a83daa19804e2a966103601127b9b5'
         let competitions = "2013,2016,2021,2001,2018,2015,2002,2019,2003,2017,2014,2000"
@@ -92,5 +62,44 @@ module.exports = {
             
         });
         
+    },
+    updateMatchLive: function() {
+        cron.schedule('0-59/10 * * * * *', () =>  {
+            console.log('stoped task');
+          })
+    },
+    updateMatchesForTheWeek: function() {
+        //1. Get all matches for the week from own db,
+        //2. Get all matches for the week from the API db, 
+        //3. For each match in own db, check if the last updated Date is different from the same in API db,
+        //4. If true, update the match in own db.
+
+        let task = cron.schedule('0-59/10 * * * * *', () => {
+            console.log("Live update!")
+        },{scheduled: false})
+
+        let matchBegun = true
+        cron.schedule('1,15 * 0 * * *', () => {
+            
+            if(matchBegun) {
+                task.start()
+                matchBegun = false
+            } else if(!matchBegun) {
+                task.stop()
+            }
+
+            console.log('updated matches for the week')
+        },{timezone: 'Europe/Sofia'}) 
+    },
+    getMatchesForToday: function() {
+         //1. At the beginning of the day, check all matches that are scheduled for the same day,
+         //2. Save their id and date in a separate collection in the database,
+         //3. If there are any matches for the day, start a scheduled task to check if the match has begun.
+        cron.schedule('1-5 1 0 * * *', () => {
+            console.log("updated for today")
+        }, {timezone: "Europe/Sofia"})    
+    },
+    checkIfMatchHasBegun: function() {
+        //1. Check every 
     }
 }

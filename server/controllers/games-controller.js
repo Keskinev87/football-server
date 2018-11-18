@@ -122,6 +122,7 @@ module.exports = {
         let reqGameId = req.body._id
        
         let competitions = req.body.competitions
+        console.log("COMPETITIONS:")
         console.log(competitions)
 
         Game.findOneAndUpdate({_id: reqGameId, admin: req.user._id}, {$set: {"competitions": competitions}}, {new: true}, (err, game) => {
