@@ -2,19 +2,26 @@ let moment = require('moment')
 let http = require('http')
 let Match = require('../data/Match')
 let cron = require('node-cron')
+let ScheduledMatch = require('../data/ScheduledMatch')
+let errorLogger = require('../utilities/error-logger')
+let checkAndUpdateScores = require('../utilities/check-and-update-scores')
+
+
+let apiToken = 'f8a83daa19804e2a966103601127b9b5'
+let rootPath = 'api.football-data.org'
 
 module.exports = {
   
     getAndSaveMatches: function() {
-        let apiToken = 'f8a83daa19804e2a966103601127b9b5'
+       
         let competitions = "2013,2016,2021,2001,2018,2015,2002,2019,2003,2017,2014,2000"
-        for (let i = 0; i<=365; i+=10) {
+        // for (let i = 0; i<=365; i+=10) {
             //TODO: put the code bellow here in order to update the database for one year ahead. The limitation of the API is maximum of 10 days for filtering. 
             //This is why we make the update with loop
             //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
-        }
-        let dateBegin = moment('2018-11-12')
-        let dateTo = moment('2018-11-22')
+        // }
+        let dateBegin = moment('2018-11-18')
+        let dateTo = moment('2018-11-27')
         let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
         console.log(urlPath)
         let options = {
@@ -63,10 +70,99 @@ module.exports = {
         });
         
     },
-    updateMatchLive: function() {
-        cron.schedule('0-59/10 * * * * *', () =>  {
-            console.log('stoped task');
-          })
+    updateMatchLive: function(match) {
+        console.log(match)
+        //1. Gets started by "checkIfMatchHasBegun" whenever a match starts
+        //2. Updates the match live until it finishes.
+        //3. Whenever the match is finished, stop the interval
+        //4. TODO: Manage the canceled/postponed case
+
+        //find the match which is live in our DB. We will constantly compare it to the same from the API
+        Match.findOne({id: match.id}).then(resMatch => {
+
+            //declare all variables to connect with the API
+            let stop = false //this will stop the interval when the match ends
+            let urlPath = "/v2/matches/" + resMatch.id
+            let options = {
+                host: rootPath,
+                path: urlPath,
+                headers: {
+                    'X-Auth-Token': apiToken,
+                    'Content-Type': 'application/json'
+                }
+            }
+            console.log("The Url: ")
+            console.log(rootPath + urlPath)
+            //set interval to update the matches every X seconds
+            let timer = setInterval(function(){
+             
+                //send request every 10 sec to check if the match is updated
+                if(!stop) {
+                    http.get(options, (response) => {
+                        let data = ''
+            
+                        response.on('error', function() {
+                            console.log("error")
+                        })
+                        response.on('data', function (chunk) {
+                            data += chunk
+                        });
+                        response.on('end', function() {
+                            let apiMatch = JSON.parse(data).match
+                            
+                            //check if the match has finished
+                            if(apiMatch.status == "FINISHED") {
+                                stop = true
+                                console.log("Stopped at:")
+                                console.log(new Date())
+                            } else {
+                                //Check if something has changed and update the match if necessarry
+                                checkAndUpdateScores(apiMatch, resMatch).then(match => {
+                                    console.log("Promise Check And Update Returned:")
+                                    console.log(match)
+                                }).catch(error => {
+                                    console.log(error)
+                                })
+                            }
+                            
+                            
+                            
+                        })
+                    })
+                    
+                } 
+                else {
+                    clearInterval(timer)
+                }    
+            },60000)
+        }).catch(error => {
+            console.log("No such match!")
+        })
+        
+    },
+    checkIfMatchHasBegun: function() {
+        //1. Check if a match has begun
+        //2. If yes - start an interval (the function updateMatchLive)
+        cron.schedule('5 1 * * * *', () => {
+            
+            let curTime = new Date()
+            curTime = curTime.getTime()
+
+            ScheduledMatch.find({dateStartInMiliseconds: {$lt : curTime}}).then(matches => {
+                if (matches) {
+                    for (let match of matches) {
+                        this.updateMatchLive(match)
+                        // foreach - delete ScheduledMatch.deleteOne({_id: match._id})
+                    }
+                }
+            }).catch(error => {
+                console.log("Server error ocurred")
+            })
+
+            console.log('Checked if match began...')
+        },{timezone: 'Europe/Sofia'}) 
+
+        
     },
     updateMatchesForTheWeek: function() {
         //1. Get all matches for the week from own db,
@@ -95,11 +191,52 @@ module.exports = {
          //1. At the beginning of the day, check all matches that are scheduled for the same day,
          //2. Save their id and date in a separate collection in the database,
          //3. If there are any matches for the day, start a scheduled task to check if the match has begun.
-        cron.schedule('1-5 1 0 * * *', () => {
-            console.log("updated for today")
-        }, {timezone: "Europe/Sofia"})    
-    },
-    checkIfMatchHasBegun: function() {
-        //1. Check every 
+        cron.schedule('3 5 58 * * * *', () => {
+            let today = new Date()
+            today = today.getTime()
+            let tomorrow = new Date()
+            tomorrow.setDate(new Date().getDate() + 2)
+            tomorrow.setHours(0)
+            tomorrow.setMinutes(0)
+            tomorrow.setSeconds(0)
+            tomorrow = tomorrow.getTime()
+            console.log("getMatchesForToday")
+            console.log(tomorrow)
+            Match.find({dateMiliseconds: { $gt: today, $lt: tomorrow }}).then(matches => {
+                //if any matches are found, save them in the list with scheduled matches for the day
+                if(matches) {
+                    for (let match of matches) {
+                        let todaysMatch = {}
+                        todaysMatch.id = match.id
+                        todaysMatch.dateStartInMiliseconds = match.dateMiliseconds
+                        todaysMatch.status = match.status
+                        //check if the match is already there
+                        ScheduledMatch.findOne({id:todaysMatch.id}).then(resMatch => {
+                            if(resMatch) {
+                                console.log("Already there")
+                            }
+                            //if not, save it
+                            if(!resMatch){
+                                ScheduledMatch.create(todaysMatch).then(savedMatch => {
+                                    console.log("Match added to schedule:")
+                                    console.log("Id: " + savedMatch.id)
+                                }).catch(error => {
+                                    //log the error
+                                    console.log(error)
+                                    errorLogger.logError(error, "GetMatchesForToday - Create Scheduled Match")
+                                })
+                            }
+                            
+                        }).catch(error => {
+                            console.log(error)
+                            errorLogger.logError(error, "GetMatchesForToday - Try find a scheduled match")
+                        })
+                    }
+                }
+            }).catch(error => {
+                errorLogger.logError(error, "GetMatchesForToday - Try find a match for today")
+            })
+        }, {timezone: "Europe/London"})    
     }
+    
 }

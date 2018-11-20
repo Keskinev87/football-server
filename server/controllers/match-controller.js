@@ -95,7 +95,7 @@ module.exports = {
         console.log(tomorrowsDate)
         console.log(typeof(tomorrowsDate))
 
-        Match.find({dateMiliseconds : {$gt: today}} && {dateMiliseconds : {$lt : tomorrowsDate}}).then(matches => {
+        Match.find({dateMiliseconds : {$gt: today, $lt : tomorrowsDate}}).then(matches => {
             if(!matches) {
                 res.status(404)
             }

@@ -8,8 +8,9 @@ const app = require('express')()
 let updaters = require('./server/updaters/index')
 
 // updaters.matches.updateMatchLive()
-updaters.matches.updateMatchesForTheWeek()
+// updaters.matches.updateMatchesForTheWeek()
 updaters.matches.getMatchesForToday()
+updaters.matches.checkIfMatchHasBegun()
 
 require('./server/config/database')(settings)
 require('./server/config/express')(app)
@@ -21,8 +22,9 @@ require('./server/config/passport')()
 // setTimeout(updaters.competitions.saveCompetition, 10000);
 // - Run to fill the database with competitions
 // updaters.competitions.getAndSaveCompetitions() 
-// updaters.matches.getAndSaveMatches()  - Run to fill the database with matches
+// Run to fill the database with matches
 
+// updaters.matches.getAndSaveMatches() 
 
 
 app.listen(settings.port)

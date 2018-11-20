@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 let matchSchema = new mongoose.Schema({
-    id: { type: String, required: true, unique: true },
+    id: { type: Number, required: true, unique: true },
     competition: { type: Object, required: true },
     season: { type: Object, required: true },
     utcDate: { type: Date, required: true},
