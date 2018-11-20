@@ -8,6 +8,8 @@ let predictionSchema = new mongoose.Schema({
     awayTeamScore: { type: Number, required: true },
     gameId: {type: mongoose.Schema.Types.ObjectId, ref: 'Game'},
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    scoreRules: {type: Object, required: true}, //the prediction can belong to any game with any different rules. When we search for it, we do it by match id. We have to know what the scoring rules are.
+    points: {type: Number, required: false},
     scorer: {type: String, required: false}
 })
 

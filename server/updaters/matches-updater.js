@@ -195,7 +195,7 @@ module.exports = {
             let today = new Date()
             today = today.getTime()
             let tomorrow = new Date()
-            tomorrow.setDate(new Date().getDate() + 2)
+            tomorrow.setDate(new Date().getDate() + 1)
             tomorrow.setHours(0)
             tomorrow.setMinutes(0)
             tomorrow.setSeconds(0)
