@@ -15,7 +15,7 @@ module.exports = {
                     let newResultHome = apiMatch.score.fullTime.homeTeam
                     let newResultAway = apiMatch.score.fullTime.awayTeam
                     console.log("New result:")
-                    console.log(newResultHome + " " + newResultAway)
+                    console.log(newResultHome + " " + newResultAway + " Shown: " + new Date())
 
                     //check if the result changed
                     if (oldResultHome != newResultHome || oldResultAway != newResultAway){

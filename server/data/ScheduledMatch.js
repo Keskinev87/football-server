@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 let scheduledMatchSchema = new mongoose.Schema({
     id: { type: Number, required: true, unique: true },
+    dateStart: { type: Date, required: true},
     dateStartInMiliseconds: { type: Number, required: true },
     status: {type: String, required: true}
 })
