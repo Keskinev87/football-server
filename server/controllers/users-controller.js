@@ -79,10 +79,10 @@ module.exports = {
   },
   getUser: (req, res) => {
     console.log(req.user)
+    let user = req.user
 
-    User.findOne({username: req.user.username}).then(user => {
-      res.status(200).json(user)
-    })
+    res.status(200).json(user)
+
   },
   logout: (req, res) => {
     req.logout()

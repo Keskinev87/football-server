@@ -1,4 +1,4 @@
-let Match = require('../data/Match')
+let LiveMatch = require('../data/LiveMatch')
 
 module.exports = {
     checkAndUpdateScores: function(apiMatch, oldMatch) {
@@ -26,8 +26,8 @@ module.exports = {
 
                     //final check if something has changed
                     if(goalsChanged == true) {
-                        //update the score and goals
-                        Match.findOneAndUpdate({id: apiMatch.id},
+                            //update the score and goals
+                            LiveMatch.findOneAndUpdate({id: apiMatch.id},
                              {$set: {'score.fullTime': apiMatch.score.fullTime}},
                              {'new': true},
                               (err, match) => {
@@ -36,7 +36,7 @@ module.exports = {
                                   } else {
                                       resolve(match)
                                   }
-                              })
+                            })
                     } 
                     else {
                         resolve(false)

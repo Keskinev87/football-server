@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 
-let scheduledMatchSchema = new mongoose.Schema({
-    _id: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true},
+let liveMatchSchema = new mongoose.Schema({
     id: { type: Number, required: true, unique: true },
     competition: { type: Object, required: true },
     season: { type: Object, required: true },
@@ -21,5 +20,5 @@ let scheduledMatchSchema = new mongoose.Schema({
     dateMiliseconds: { type: Number, required: false}
   })
 
-  let ScheduledMatch = mongoose.model('ScheduledMatch', scheduledMatchSchema)
-  module.exports = ScheduledMatch
+  let LiveMatch = mongoose.model('LiveMatch', liveMatchSchema)
+  module.exports = LiveMatch

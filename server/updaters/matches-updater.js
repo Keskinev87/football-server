@@ -3,9 +3,11 @@ let http = require('http')
 let Match = require('../data/Match')
 let cron = require('node-cron')
 let ScheduledMatch = require('../data/ScheduledMatch')
+let LiveMatch = require('../data/LiveMatch')
 let errorLogger = require('../utilities/error-logger')
 let checkAndUpdateScores = require('../utilities/check-and-update-scores')
 let predictionUpdater = require('./prediction-updater')
+let mongoose = require('mongoose')
 
 
 let apiToken = 'f8a83daa19804e2a966103601127b9b5'
@@ -22,8 +24,8 @@ module.exports = {
             //This is why we make the update with loop
             //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
         // }
-        let dateBegin = moment('2018-11-18')
-        let dateTo = moment('2018-11-27')
+        let dateBegin = moment('2018-11-22')
+        let dateTo = moment('2018-11-29')
         let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
         console.log(urlPath)
         let options = {
@@ -81,7 +83,7 @@ module.exports = {
         //4. TODO: Manage the canceled/postponed case
 
         //find the match which is live in our DB. We will constantly compare it to the same from the API
-        Match.findOne({id: match.id}).then(resMatch => {
+        LiveMatch.findOne({id: match.id}).then(resMatch => {
             //all variables to connect with the API
             let stop = false //this will stop the interval when the match ends
             let urlPath = "/v2/matches/" + resMatch.id
@@ -117,6 +119,7 @@ module.exports = {
                             if(apiMatch.status == "FINISHED") {
                                 stop = true
                                 predictionUpdater.updatePrediction(apiMatch)
+                                //TODO - DELETE THE MATCH FROM LIVE AND UPDATE IT
                                 console.log("Stopped at:")
                                 console.log(new Date())
                             } else {
@@ -134,7 +137,7 @@ module.exports = {
                 else {
                     clearInterval(timer)
                 }    
-            },20000)
+            },60000)
         }).catch(error => {
             console.log("No such match!")
         })
@@ -143,20 +146,36 @@ module.exports = {
     checkIfMatchHasBegun: function() {
         //1. Check if a match has begun
         //2. If yes - start an interval (the function updateMatchLive)
-        cron.schedule('21 1-59 * * * *', () => {
+        cron.schedule('1 1-59 * * * *', () => {
             
             let curTime = new Date()
             curTime = curTime.getTime()
             console.log("Checking if match has began")
-            ScheduledMatch.find({dateStartInMiliseconds: {$lt : curTime}, status: {$ne: "FINISHED"}}).then(matches => {
+            ScheduledMatch.find({dateMiliseconds: {$lt : curTime}, status: {$ne: "FINISHED"}}).then(matches => {
                 if (matches) {
                     for (let match of matches) {
-                        this.updateMatchLive(match)
-                        ScheduledMatch.remove({_id: match._id}).then(() => {
-                            console.log("Match deleted from scheduled")
+
+                        //check if the match isn't there already
+                        LiveMatch.findOne({id: match.id}).then(foundMatch => {
+                            if(!foundMatch) {
+                                //add the match to the collection with live matches
+                                match._id = mongoose.Types.ObjectId();
+                                match.isNew = true
+                                LiveMatch.create(match).then(() => {
+                                    this.updateMatchLive(match)
+                                    ScheduledMatch.remove({_id: match._id}).then(() => {
+                                        console.log("Match deleted from scheduled")
+                                    }).catch(error => {
+                                        console.log("Scheduled match removal failed")
+                                    })
+                                }).catch(error => {
+                                    console.log("Live match create failed")
+                                })
+                            }
                         }).catch(error => {
-                            console.log(error)
+                            console.log("Live Match finding failed")
                         })
+                        
                     }
                 }
             }).catch(error => {
@@ -195,8 +214,9 @@ module.exports = {
          //1. At the beginning of the day, check all matches that are scheduled for the same day,
          //2. Save their id and date in a separate collection in the database,
          //3. If there are any matches for the day, start a scheduled task to check if the match has begun.
-        cron.schedule('30 47 0 * * *', () => {
+        cron.schedule('0 30 1 * * *', () => {
             let today = new Date()
+            today.setDate(new Date().getDate() - 1)
             today = today.getTime()
             let tomorrow = new Date()
             tomorrow.setDate(new Date().getDate() + 1)
@@ -210,19 +230,17 @@ module.exports = {
                 //if any matches are found, save them in the list with scheduled matches for the day
                 if(matches) {
                     for (let match of matches) {
-                        let todaysMatch = {}
-                        todaysMatch.id = match.id
-                        todaysMatch.dateStart = match.utcDate
-                        todaysMatch.dateStartInMiliseconds = match.dateMiliseconds
-                        todaysMatch.status = match.status
+                        
                         //check if the match is already there
-                        ScheduledMatch.findOne({id:todaysMatch.id}).then(resMatch => {
+                        ScheduledMatch.findOne({id:match.id}).then(resMatch => {
                             if(resMatch) {
                                 console.log("Already there")
                             }
                             //if not, save it
                             if(!resMatch){
-                                ScheduledMatch.create(todaysMatch).then(savedMatch => {
+                                match._id = mongoose.Types.ObjectId()
+                                match.isNew = true
+                                ScheduledMatch.create(match).then(savedMatch => {
                                     console.log("Match added to schedule:")
                                     console.log("Id: " + savedMatch.id)
                                 }).catch(error => {
@@ -241,7 +259,7 @@ module.exports = {
             }).catch(error => {
                 errorLogger.logError(error, "GetMatchesForToday - Try find a match for today")
             })
-        }, {timezone: "Europe/London"})    
+        }, {timezone: "Europe/Sofia"})    
     }
     
 }

@@ -30,7 +30,12 @@ module.exports = {
                             }
                         })
                     }
+                } else {
+                    console.log("No predictions for this match.")
                 }
+
+            }).catch(error => {
+                console.log(error)
             })
     },
     calculatePoints: function(goalsHome, goalsAway, predHome, predAway, prediction) {
