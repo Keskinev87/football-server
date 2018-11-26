@@ -24,7 +24,7 @@ module.exports = {
             //This is why we make the update with loop
             //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
         // }
-        let dateBegin = moment('2018-11-22')
+        let dateBegin = moment('2018-11-26')
         let dateTo = moment('2018-11-29')
         let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
         console.log(urlPath)
@@ -163,8 +163,12 @@ module.exports = {
                                 match.isNew = true
                                 LiveMatch.create(match).then(() => {
                                     this.updateMatchLive(match)
-                                    ScheduledMatch.remove({_id: match._id}).then(() => {
+                                    ScheduledMatch.deleteOne({_id: match._id}).then(() => {
                                         console.log("Match deleted from scheduled")
+                                        Match.findOneAndUpdate({id: match.id}, {$set :{'status' : match.status}})
+                                            .catch(error => {
+                                                console.log("The match was added to live, but not updated")
+                                            })
                                     }).catch(error => {
                                         console.log("Scheduled match removal failed")
                                     })
@@ -183,7 +187,7 @@ module.exports = {
             })
 
             console.log('Checked if match began...')
-        },{timezone: 'Europe/Sofia'}) 
+        },{timezone: 'Europe/London'}) 
 
         
     },
@@ -214,7 +218,7 @@ module.exports = {
          //1. At the beginning of the day, check all matches that are scheduled for the same day,
          //2. Save their id and date in a separate collection in the database,
          //3. If there are any matches for the day, start a scheduled task to check if the match has begun.
-        cron.schedule('0 30 1 * * *', () => {
+        cron.schedule('5 14 0 * * *', () => {
             let today = new Date()
             today.setDate(new Date().getDate() - 1)
             today = today.getTime()

@@ -6,7 +6,7 @@ module.exports = {
 
             //find all predictions for this match
             Prediction.find({matchId: match.id}).then(predictions => {
-                if(predicitons) {
+                if(predictions) {
                     let goalsHome = match.score.fullTime.homeTeam
                     let goalsAway = match.score.fullTime.awayTeam
                     
@@ -46,31 +46,31 @@ module.exports = {
 
         //case exact tie (you play 1:1, match ends 1:1):
         if(predHome == predAway && predHome == goalsHome && predAway == goalsAway)
-            points += rules.exactTie
+            points += Number(rules.exactTie)
             // console.log("Exact X")
         //case X but different goals (you play 1:1, match ends 2:2)""
         else if (predHome == predAway && goalsHome == goalsAway)
-            points += rules.tie
+            points += Number(rules.tie)
             // console.log("X but different")
         //case exactMatch (you play 1:0, match ends 1:0):
         else if(goalsHome == predHome && goalsAway == predAway)
-            points += rules.exactMatch
+            points += Number(rules.exactMatch)
             // console.log("Exact match")
         //case goalDiff (you play 2:0, match ends 3:1):
         else if((goalsHome - goalsAway) == (predHome - predAway) && goalsHome != goalsAway )
-            points += rules.goalDiff
+            points += Number(rules.goalDiff)
             // console.log("Goal Diff")
         //case oneGoalDiff (you play 2:0, match ends 3:0, 2:1 or 1:0):
         else if((goalsHome == predHome && Math.abs(goalsAway - predAway) == 1) || (goalsAway == predAway && Math.abs(goalsHome - predHome) == 1))
-            points += rules.oneGoalDiff
+            points += Number(rules.oneGoalDiff)
             // console.log("One Goal Diff")
         //case guessedWinner (none of the previous conditions is valid for you, but you still guessed the winner)
         else if(((goalsHome > goalsAway) && (predHome > predAway)) || ((goalsHome < goalsAway) && (predHome < predAway)))
-            points += rules.guessedWinner
+            points += Number(rules.guessedWinner)
             // console.log("Guessed winner")
         else if (goalsHome == 0 && goalsAway == 0 && predHome == 0 && predAway == 0)
-            // point += prediction.scoreRules.zeroZero
-            console.log("Zero - zero")
+            point += Number(rules.zeroZero)
+            // console.log("Zero - zero")
         else
             points = 0
             

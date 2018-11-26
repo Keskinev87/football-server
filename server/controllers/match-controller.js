@@ -1,6 +1,7 @@
 const Match = require('../data/Match')
 const Game = require('../data/Game')
 const User = require('../data/User')
+const LiveMatch = require('../data/LiveMatch')
 
 module.exports = {
     getAllMatches: (req, res) => {
@@ -122,6 +123,32 @@ module.exports = {
             })
         }
       })
+
+    },
+    getLiveScores: (req, res) => {
+        let matches = req.body
+        let resMatches = []
+
+        for (let match of matches) {
+            LiveMatch.findOne({id: match.id}).then(liveMatch => {
+                let oldHomeScore = match.score.fullTime.homeTeam
+                let oldAwayScore = match.score.fullTime.awayTeam
+                let newHomeScore = liveMatch.score.fullTime.homeTeam
+                let newAwayScore = liveMatch.score.fullTime.awayTeam
+                
+                if(oldHomeScore != newHomeScore || oldAwayScore != newAwayScore) {
+                    resMatches.push(liveMatch)
+                    console.log("Res matches")
+                    console.log(resMatches)
+                    res.status(200).json(resMatches)
+                } else {
+                    res.status(204)
+                }
+
+            }).catch(error => [
+                res.status(500).json("Some server error")
+            ])
+        }
 
     }
 }
