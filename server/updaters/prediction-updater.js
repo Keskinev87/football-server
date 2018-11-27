@@ -33,6 +33,7 @@ module.exports = {
                 } else {
                     console.log("No predictions for this match.")
                 }
+                return "finished"
 
             }).catch(error => {
                 console.log(error)

@@ -10,6 +10,7 @@ module.exports = (app) => {
   app.get('/user/get', passport.authenticate('jwt', {session: false}), controllers.users.getUser)
   app.post('/users/logout', controllers.users.logout)
   app.post('/predictions/makeMatchPrediction', passport.authenticate('jwt', {session: false}), controllers.predictions.makeMatchPrediction)
+  app.post('/predictions/evaluatePredictionsForMatches', controllers.predictions.evaluatePredictionsForMatches)
   app.post('/predictions/editMatchPrediction', passport.authenticate('jwt', {session: false}), controllers.predictions.editMatchPrediction)
   app.get('/predictions/getMatchPredictionsForUser', passport.authenticate('jwt', {session: false}), controllers.predictions.getMatchPredictionsForUser)
   app.get('/game/getAll', passport.authenticate('jwt', {session:false}), controllers.games.getGamesByParticipant)

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 
 let scheduledMatchSchema = new mongoose.Schema({
-    _id: { type: mongoose.Schema.Types.ObjectId, required: true, unique: true},
     id: { type: Number, required: true, unique: true },
     competition: { type: Object, required: true },
     season: { type: Object, required: true },

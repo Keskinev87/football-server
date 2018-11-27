@@ -24,7 +24,7 @@ module.exports = {
             //This is why we make the update with loop
             //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
         // }
-        let dateBegin = moment('2018-11-26')
+        let dateBegin = moment('2018-11-24')
         let dateTo = moment('2018-11-29')
         let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
         console.log(urlPath)

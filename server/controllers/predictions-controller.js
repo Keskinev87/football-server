@@ -2,6 +2,8 @@ const Game = require('../data/Game')
 const User = require('../data/User')
 const moment = require('moment')
 const Prediction = require('../data/Prediction')
+const Match = require('../data/Match')
+const predictionUpdater = require('../updaters/prediction-updater')
 
 module.exports = {
 
@@ -17,6 +19,20 @@ module.exports = {
        }).catch(error => {
            res.status(500).json({error: "Prediction could not be saved"})
        })
+    },
+    evaluatePredictionsForMatches: (req, res) => {
+        let matchIds = req.body
+        
+
+        for (let matchId of matchIds) {
+            Match.findOne({id: matchId}).then(match => {
+                predictionUpdater.updatePrediction(match)
+            }).catch(error => {
+                console.log(error)
+            })
+        }
+        console.log("Eval finished")
+        res.status(200).json("Ok")
     },
     editMatchPrediction: (req, res) => {
         let prediction = req.body
