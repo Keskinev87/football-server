@@ -6,30 +6,30 @@ const Prediction = require('../data/Prediction')
 module.exports = {
     joinGameWithCode: (req, res) => {
         
-       let secretCode = req.body.gameCode
-       console.log("Secret code is:" + secretCode)
-       let userGameIds = req.user.games
-       Game.findOne({secretCode: secretCode}).then(game => {
-           
-           var userHasTheGame = false
-           for (let i = 0; i < userGameIds.length; i++) {
-                if (userGameIds[i].toString() == game._id.toString()) {
-                    userHasTheGame = true
-                }
-                console.log(userHasTheGame)
-           }
-           console.log("Var is: " + userHasTheGame)
-           if(userHasTheGame) {
-               res.status(401).json({error: "You already participate in that game!"})
-           } else {
-               res.status(200).json(game)
-           }
-       })
-       .catch(error => {
-           res.status(500).json({error: error})
-       })
-
+        let secretCode = req.body.gameCode
+        console.log("Secret code is:" + secretCode)
+        let userGameIds = req.user.games
+        console.log("User game ids: " + userGameIds.join(','))
+        console.log(req.user)
+        let userId = req.user._id
         
+        Game.findOneAndUpdate({secretCode: secretCode, _id: {$nin: userGameIds}}, {$push : {'users': userId}}, (err, game) => {
+            if(err) {
+                res.status(500).json({error: "Server error"})
+            } else if (!game) {
+                res.status(404).json({error: "No such game found or you already participate in this one."})
+            } else {
+                User.findOneAndUpdate({_id: userId}, { $push:{'games': game._id}}, (err, user) => {
+                    if(err) {
+                        res.status(500).json("Server Error")
+                    } else if(!user) {
+                        res.status(404).json("User not found")
+                    } else {
+                        res.status(200).json(game)
+                    }
+                })
+            }
+        })
         
 
         //TODO: Make sure that the secret code of every game is unique since this is the only thing the game is searched by. 
