@@ -32,6 +32,9 @@ module.exports = (app) => {
   app.get('/competitions/getAll', passport.authenticate('jwt', {session: false}), controllers.competitions.getAllCompetitions)
   app.post('/competitions/saveCompetition', passport.authenticate('jwt', {session: false}), controllers.competitions.saveCompetition)
   app.post('/competitions/getCompetitionById', passport.authenticate('jwt', {session: false}), controllers.competitions.getCompetitionsById)
+  //admin routes
+  app.post('/competitions/getFromApi', passport.authenticate('jwt', {session: false}), controllers.competitions.getAndSaveCompetitionsFromApi)
+  app.post('/matches/getFromApi', passport.authenticate('jwt', {session: false}), controllers.matches.getMatchesFromApi)
 
   app.all('*', (req, res) => {
     res.status(404).send('404 Not Found!')

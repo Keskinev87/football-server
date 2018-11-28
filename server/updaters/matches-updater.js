@@ -38,6 +38,7 @@ module.exports = {
         }
         http.get(options, (response) => {
             let data =''
+            let errorMessages = []
 
             response.on('error', function() {
                 console.log("error")
@@ -48,14 +49,15 @@ module.exports = {
             response.on('end', function() {
                 let matches = JSON.parse(data).matches
                 matches.forEach((resMatch) => {
-                    console.log(resMatch.utcDate)
-                    console.log(typeof(resMatch.utcDate))
+                    
                     let dateMiliseconds = new Date(resMatch.utcDate).getTime()
                     resMatch.dateMiliseconds = dateMiliseconds
+                    
 
                     Match.findOne({id: resMatch.id}).then(match => {
          
                         if (match) {
+                            errorMessages.push("match " + match.id + " already exists")
                             console.log('Match already exists!') 
                         }
                         else {
@@ -70,7 +72,7 @@ module.exports = {
                     })
                 })
             })
-            
+            return errorMessages
         });
         
     },

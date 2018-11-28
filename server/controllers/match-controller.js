@@ -2,6 +2,7 @@ const Match = require('../data/Match')
 const Game = require('../data/Game')
 const User = require('../data/User')
 const LiveMatch = require('../data/LiveMatch')
+const matchesUpdater = require('../updaters/matches-updater')
 
 module.exports = {
     getAllMatches: (req, res) => {
@@ -148,6 +149,15 @@ module.exports = {
             }).catch(error => [
                 res.status(500).json("Some server error")
             ])
+        }
+
+    },
+    getMatchesFromApi: (req, res) => {
+        if(req.user.roles[0] == "Admin") {
+            matchesUpdater.getAndSaveMatches()
+                res.status(200).json()
+        } else {
+            res.status(403).json()
         }
 
     }

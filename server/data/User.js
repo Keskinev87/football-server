@@ -22,18 +22,21 @@ let User = mongoose.model('User', userSchema)
 
 module.exports = User
 module.exports.seedAdminUser = () => {
-  User.find({}).then(users => {
+  User.find({username: 'admin@admin.com'}).then(users => {
     if (users.length > 0) return
 
     let salt = encryption.generateSalt()
-    let hashedPass = encryption.generateHashedPassword(salt, '123456')
+    let hashedPass = encryption.generateHashedPassword(salt, 'Master88#')
+    let dateCreated = new Date()
 
     User.create({
       username: 'admin@admin.com',
       fullName: 'Admin',
+      games:[],
       salt: salt,
       hashedPass: hashedPass,
-      roles: ['Admin']
+      roles: ['Admin'],
+      dateCreated: dateCreated
     })
   })
 }

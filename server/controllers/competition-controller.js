@@ -1,4 +1,5 @@
 const Competition = require('../data/Competition')
+const competitionUpdater = require('../updaters/competitions-updater')
 
 module.exports = {
     getAllCompetitions: (req, res) => {
@@ -30,6 +31,26 @@ module.exports = {
             })
             }
       })
+    },
+    getAndSaveCompetitionsFromApi: (req, res) => {
+        let availableCompetitions = [2013, 2016, 2021, 2001, 2018, 2015, 2002, 2019, 2003, 2017, 2014, 2000]
+        let updatedCompetitions = []
+        let errors = []
+        if(req.user.roles[0] == "Admin") {
+            for (let id of availableCompetitions) {
+                competitionUpdater.getFromApiAndSaveCompetition(id).then((competition) => {
+                    updatedCompetitions.push(competition)
+                }).catch(error => {
+                    errors.push(error)
+                    console.log(error)
+                })
+            }
+        res.status(200).json(updatedCompetitions)
+        } else {
+            res.status(403).json({error:"You are not authorized"})
+        }
+
+        
     }
 }
   
