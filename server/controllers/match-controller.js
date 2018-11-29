@@ -3,6 +3,7 @@ const Game = require('../data/Game')
 const User = require('../data/User')
 const LiveMatch = require('../data/LiveMatch')
 const matchesUpdater = require('../updaters/matches-updater')
+let moment = require('moment')
 
 module.exports = {
     getAllMatches: (req, res) => {
@@ -153,9 +154,25 @@ module.exports = {
 
     },
     getMatchesFromApi: (req, res) => {
+        let from = req.body.from
+        let to = req.body.to
+        console.log("From" + from)
+        console.log("To" + to)
+        
+        let dateBegin = moment(from)
+        let dateTo = moment(to)
+
+        // let dateBegin = moment('2018-11-24')
+        // let dateTo = moment('2018-11-29')
+        
         if(req.user.roles[0] == "Admin") {
-            matchesUpdater.getAndSaveMatches()
-                res.status(200).json()
+            matchesUpdater.getAndSaveMatches(dateBegin, dateTo)
+                .then(savedMatches => {
+                res.status(200).json(savedMatches)
+                })
+                .catch(error => {
+                    res.status(500).json(error)
+                })     
         } else {
             res.status(403).json()
         }

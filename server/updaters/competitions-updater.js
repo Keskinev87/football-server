@@ -34,13 +34,11 @@ module.exports = {
         });
 
     },
-    getFromApiAndSaveCompetition: function(competitionId) {
-        return new Promise ((resolve, reject) => {
-            console.log("Competition Id for Search: " + competitionId)
-            
+    getFromApiAndSaveCompetition: function() {
+        return new Promise((resolve, reject) => {
             let options = {
                 host: env.apiRoot,
-                path: '/v2/competitions/' + competitionId,
+                path: '/v2/competitions/?plan=TIER_ONE',
                 headers: env.headers
             }
                 
@@ -48,35 +46,59 @@ module.exports = {
                 let data =''
         
                 response.on('error', function() {
-                    reject(error)
+                    return(error)
                 })
                 response.on('data', function (chunk) {
                     data += chunk
                 });
                 response.on('end', function() {
+                   
+                    let parsedData = JSON.parse(data)
+                   
+                    let competitions = parsedData.competitions;
                     
-                    let newCompetition = new Competition(JSON.parse(data));
-    
-                    Competition.findOne({id: newCompetition.id}).then(competition => {
-             
-                        if (competition) {
-                            reject({error: "Competition already exists"})
+                    let promises = []
+                    
+                    for(let competition of competitions) {
+                        promises.push(saveCompetitions(competition))
+                    }
+
+                    Promise.all(promises).then((responseCompetitions) => {
+                        resolve(responseCompetitions)
+                    }).catch(error => {
+                        reject(error)
+                    })
+
+                   
+                    
+                })
+                    
+            });
+
+            function saveCompetitions(competition) {
+                
+                return new Promise((resolve, reject) => {
+                    Competition.findOne({id: competition.id}).then(foundCompetition => {
+                        // console.log(competition)
+                        if (foundCompetition) {
+                            reject("Already There")
                         }
                         else {
-                            Competition.create(newCompetition).then(createdCompetition => {
+                            Competition.create(competition).then(createdCompetition => {
+                                console.log("Created one" + createdCompetition.id)
                                 resolve(createdCompetition)
                             }).catch(error => {
                                 reject(error)
                             })
                         }       
+                    }).catch(error => {
+                        reject(error)
                     })
+
                 })
-                    
-            });
-            
+            }
+        
         })
-        
-        
-        
     }
 }
+                

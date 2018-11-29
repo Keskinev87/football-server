@@ -15,66 +15,86 @@ let rootPath = 'api.football-data.org'
 
 module.exports = {
   
-    getAndSaveMatches: function() {
-       //USED TO GET MATCHES FROM THE API FOR THE SELECTED PERIOD
+    getAndSaveMatches: function(dateBegin, dateTo) {
 
-        let competitions = "2013,2016,2021,2001,2018,2015,2002,2019,2003,2017,2014,2000"
-        // for (let i = 0; i<=365; i+=10) {
-            //TODO: put the code bellow here in order to update the database for one year ahead. The limitation of the API is maximum of 10 days for filtering. 
-            //This is why we make the update with loop
-            //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
-        // }
-        let dateBegin = moment('2018-11-24')
-        let dateTo = moment('2018-11-29')
-        let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
-        console.log(urlPath)
-        let options = {
-            host: 'api.football-data.org',
-            path: urlPath,
-            headers: {
-                'X-Auth-Token': apiToken,
-                'Content-Type': 'application/json'
+        return new Promise((resolve, reject) => {
+//USED TO GET MATCHES FROM THE API FOR THE SELECTED PERIOD
+
+            let competitions = "2013,2016,2021,2001,2018,2015,2002,2019,2003,2017,2014,2000"
+            // for (let i = 0; i<=365; i+=10) {
+                //TODO: put the code bellow here in order to update the database for one year ahead. The limitation of the API is maximum of 10 days for filtering. 
+                //This is why we make the update with loop
+                //Reminder: The API provides 10 calls per minute. Put some delay between each iteration. 
+            // }
+            let urlPath = "/v2/matches" + "?" + "competitions" + "=" + competitions + "&" + "dateFrom=" + dateBegin.format('YYYY-MM-DD') + "&" +"dateTo=" + dateTo.format('YYYY-MM-DD')
+            console.log(urlPath)
+            let options = {
+                host: 'api.football-data.org',
+                path: urlPath,
+                headers: {
+                    'X-Auth-Token': apiToken,
+                    'Content-Type': 'application/json'
+                }
             }
-        }
-        http.get(options, (response) => {
-            let data =''
-            let errorMessages = []
+            http.get(options, (response) => {
+                let data =''
+                let errorMessages = []
 
-            response.on('error', function() {
-                console.log("error")
-            })
-            response.on('data', function (chunk) {
-                data += chunk
-            });
-            response.on('end', function() {
-                let matches = JSON.parse(data).matches
-                matches.forEach((resMatch) => {
-                    
-                    let dateMiliseconds = new Date(resMatch.utcDate).getTime()
-                    resMatch.dateMiliseconds = dateMiliseconds
-                    
-
-                    Match.findOne({id: resMatch.id}).then(match => {
-         
-                        if (match) {
-                            errorMessages.push("match " + match.id + " already exists")
-                            console.log('Match already exists!') 
-                        }
-                        else {
-                            Match.create(resMatch, (err) => {
-                                if (err) {
-                                    console.log(err)
-                                    console.log(match)
-                                }
-                                else console.log('Match Saved')
-                            })
-                        }       
-                    })
+                response.on('error', function() {
+                    console.log("error")
                 })
-            })
-            return errorMessages
-        });
+                response.on('data', function (chunk) {
+                    data += chunk
+                });
+                response.on('end', function() {
+                    console.log("Got data")
+                    console.log(data)
+                    let matches = JSON.parse(data).matches
+
+
+                    let promises = []
+
+                    for (let resMatch of matches) {
+                        promises.push(saveMatch(resMatch))
+                    }
+
+                    Promise.all(promises).then(savedMatches => {
+                        resolve(savedMatches)
+                    }).catch(error => [
+                        reject(error)
+                    ])
+
+                    function saveMatch(resMatch) {
+                        return new Promise((resolve, reject) => {
+                            let dateMiliseconds = new Date(resMatch.utcDate).getTime()
+                            resMatch.dateMiliseconds = dateMiliseconds
+                            
         
+                            Match.findOne({id: resMatch.id}).then(match => {
+                
+                                if (match) {
+                                    resolve("Match already there: " + match.id)
+                                }
+                                else {
+                                    Match.create(resMatch).then( createdMatch => {
+                                        resolve("Match saved: " + createdMatch.id)
+                                    }).catch(error => {
+                                        console.log(error)
+                                        reject(error)
+                                    })
+                                }       
+                            }).catch(error => {
+                                console.log(error)
+                                reject(error)
+                            })
+                        })
+                    }
+                
+                })
+                return errorMessages
+            });
+        })
+       
     },
     updateMatchLive: function(match) {
         //USED TO UPDATE THE MATCH WHILE IT IS LIVE BY ASKING THE API FOR CHANGES EVERY 10 SECONDS
