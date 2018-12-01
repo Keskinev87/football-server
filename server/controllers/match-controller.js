@@ -28,30 +28,33 @@ module.exports = {
         })
 
     },
-    getByCompetitionId: (req, res) => {
+    getPendingByCompetitionId: (req, res) => {
         console.log(req.body)
         let competitionIds = req.body
-        let yesterday = new Date()
-        yesterday.setDate(new Date().getDate() - 1)
-        yesterday = yesterday.getTime()
-        console.log(yesterday)
+        let today = new Date()
+        today.setHours(0)
+        today.setMinutes(0)
+        today.setSeconds(0)
+        today = today.getTime()
+        
 
         let theDayAfterTomorrow = new Date()
         theDayAfterTomorrow.setDate(new Date().getDate() + 2) 
         theDayAfterTomorrow = theDayAfterTomorrow.getTime()
-        console.log(theDayAfterTomorrow)
+        
 
         
 
-        Match.find({'competition.id': {$in: competitionIds}} && {'dateMiliseconds':{$gt: yesterday}} && {'dateMiliseconds': {$lt: theDayAfterTomorrow}}).then(matches => {
+        Match.find({'competition.id': {$in: competitionIds}, 'dateMiliseconds':{$gt: today, $lt: theDayAfterTomorrow}}).then(matches => {
             if(!matches) {
                 res.status(404).json({error: "No matches found"})
             }
             else {
-                console.log(matches[0].utcDate.getTime())
+                console.log("Got pending matches by id: " + matches.length)
                 res.status(200).json(matches)
             }
         }).catch(error => {
+            console.log(error)
             res.status(500).json({error: "Some server error"})
         })
 

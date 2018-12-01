@@ -78,7 +78,7 @@ module.exports = {
      
   },
   getUser: (req, res) => {
-    console.log(req.user)
+
     let user = req.user
 
     res.status(200).json(user)
