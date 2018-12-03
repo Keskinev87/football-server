@@ -9,8 +9,11 @@ let updaters = require('./server/updaters/index')
 
 // updaters.matches.updateMatchLive()
 // updaters.matches.updateMatchesForTheWeek()
-updaters.matches.getMatchesForToday()
-updaters.matches.checkIfMatchHasBegun()
+// updaters.matches.getMatchesForToday()
+// updaters.matches.checkIfMatchHasBegun()
+updaters.matches.weeklyUpdate()
+updaters.matches.dailyUpdate()
+updaters.matches.matchStartedUpdate()
 
 require('./server/config/database')(settings)
 require('./server/config/express')(app)
