@@ -2,42 +2,66 @@ let Prediction = require('../data/Prediction')
 let Game = require('../data/Game')
 
 module.exports = {
-    updatePrediction: function(match) {
-
+    updatePredictions: function(match) {
+        return new Promise((resolve, reject) => {
             //find all predictions for this match
             Prediction.find({matchId: match.id}).then(predictions => {
                 if(predictions) {
                     let goalsHome = match.score.fullTime.homeTeam
                     let goalsAway = match.score.fullTime.awayTeam
                     
+                    let predictionPromises = []
 
                     for (let prediction of predictions) {
                         let predHome = prediction.homeTeamScore
                         let predAway = prediction.awayTeamScore
-                        //calculate the points after the end result is clear
-                        let points = this.calculatePoints(goalsHome, goalsAway, predHome, predAway, prediction)
-                        //update the prediction with the new score
-                        Prediction.findOneAndUpdate({_id: prediction._id}, {$set:{'points':points}}, {'new': true}, (err, updPrediction) => {
-                            if (err) {
-                                console.log("Prediction could not be updated!")
-                                console.log(err)
-                            }
-                            if(updPrediction) {
-                                console.log(updPrediction.points)
-                            }
-                            else {
-                                console.log("Nothing happened")
-                            }
-                        })
+                        let predId = prediciton_id
+                        
+                        predictionPromises.push(resolvePrediction(goalsHome, goalsAway, predHome, predAway, predId))
                     }
+
+                    Promise.all(predictionPromises).then(resolvedPredictions => {
+                        resolve(resolvedPredictions)
+                    }).catch(error => {
+                        reject(error)
+                    })
+
+                    function resolvePrediction(goalsHome, goalsAway, predHome, predAway, predId) {
+                        return new Promise((resolve, reject) => {
+                            
+                            let points = this.calculatePoints(goalsHome, goalsAway, predHome, predAway, prediction)
+
+                            //update the prediction with the new score
+                            Prediction.findOneAndUpdate({_id: predId}, {$set:{'points':points}}, {'new': true}, (err, updPrediction) => {
+                                if (err) {
+                                    reject(err)
+                                }
+                                if(updPrediction) {
+                                    console.log("Updated Prediction")
+                                    console.log(updPrediction)
+                                    resolve("Updated Prediction: " + updPrediction._id)
+                                }
+                                else {
+                                    console.log("No prediction was updated?!?")
+                                    reject("No prediction was found?!?!")
+                                }
+                            })
+                        })
+                        
+                    }
+
                 } else {
                     console.log("No predictions for this match.")
+                    reject("No predictions for this match")
                 }
-                return "finished"
-
             }).catch(error => {
+                console.log("Problem occured when searching for predictions")
                 console.log(error)
+                reject(error)
             })
+        })
+            
+            
     },
     calculatePoints: function(goalsHome, goalsAway, predHome, predAway, prediction) {
         
