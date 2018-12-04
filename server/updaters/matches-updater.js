@@ -183,10 +183,9 @@ module.exports = {
                 let curTime = new Date()
                 curTime = curTime.getTime()
                 console.log("Checking if match has began")
-                UpdateLogger.logStatus(loggerName, "Check if match started initiated...")
     
-                ScheduledMatch.find({dateMiliseconds: {$lt : curTime}, status: {$ne: "FINISHED" || "CANCELED" || "POSTPONED"}}).then(matches => {
-                    if (matches) {
+                ScheduledMatch.find({dateMiliseconds: {$lt : curTime}, status: {$ne: "FINISHED" || "CANCELED" || "SUSPENDED" || "POSTPONED"}}).then(matches => {
+                    if (matches.length > 0) {
                         UpdateLogger.logStatus(loggerName, "Some matches just started...")
                         let promises = []
                         for (let match of matches) {
@@ -200,6 +199,8 @@ module.exports = {
                             UpdateLogger.logStatus(loggerName,"Rejected with an error", error)
                             reject(error)
                         })
+                    } else {
+                        console.log("No matches added to schedule")
                     }
                 }).catch(error => {
                     reject(error)
@@ -231,78 +232,172 @@ module.exports = {
                     })
                 }
             })
-        },{timezone: 'Europe/London'}) 
+        },{timezone: 'Europe/Sofia'}) 
 
         
     },
-    updateMatchLive: function(match) {
+    liveUpdate: function() {
         //USED TO UPDATE THE MATCH WHILE IT IS LIVE BY ASKING THE API FOR CHANGES EVERY 10 SECONDS
         
         //1. Gets started by "checkIfMatchHasBegun" whenever a match starts
         //2. Updates the match live until it finishes.
         //3. Whenever the match is finished, stop the interval
         //4. TODO: Manage the canceled/postponed case
+        cron.schedule('50 1-59 * * * *', () => {
+            return new Promise((resolve, reject) => {
+                //TODO: add the canceled promises logic
+                LiveMatch.find({}).then(resMatches => {
+                    console.log("Searching for live matches...")
+                    //if any matches are live, begin updating them
+                    if(resMatches.length > 0) {
+                        let updatePromises = []
+                        let resolvePredictionPromises = []
+                        let finishedMatchesPromises = []
+                        let canceledPromises =[]
 
-        //find the match which is live in our DB. We will constantly compare it to the same from the API
-        LiveMatch.findOne({id: match.id}).then(resMatch => {
-            //all variables to connect with the API
-            let stop = false //this will stop the interval when the match ends
-            let urlPath = "/v2/matches/" + resMatch.id
-            let options = {
-                host: rootPath,
-                path: urlPath,
-                headers: {
-                    'X-Auth-Token': apiToken,
-                    'Content-Type': 'application/json'
-                }
-            }
-            console.log("The Url: ")
-            console.log(rootPath + urlPath)
-            //set interval to update the match every X seconds
-
-            let timer = setInterval(function(){
-             
-                //send request every X sec to check if the match is updated
-                if(!stop) {
-                    http.get(options, (response) => {
-                        let data = ''
-            
-                        response.on('error', function() {
-                            console.log("error")
-                        })
-                        response.on('data', function (chunk) {
-                            data += chunk
-                        });
-                        response.on('end', function() {
-                            let apiMatch = JSON.parse(data).match
-                            
-                            //check if the match has finished
-                            if(apiMatch.status == "FINISHED") {
-                                stop = true
-                                predictionUpdater.updatePrediction(apiMatch)
-                                //TODO - DELETE THE MATCH FROM LIVE AND UPDATE IT
-                                console.log("Stopped at:")
-                                console.log(new Date())
+                        for (let resMatch of resMatches) {
+                            //check if match has finished. If finished - update the match, update all predictions for this match, delete it from LiveMatches
+                            if(resMatch.status === "FINISHED"){
+                                //we will fill several arrays with promises here. All of the promises are declared below
+                                resolvePredictionPromises.push(resolvePredictions(resMatch))
+                                finishedMatchesPromises.push(resolveFinishedMatch(resMatch))
+                            }
+                            else if(resMatch.status === "CANCELED" || "POSTPONED" || "SUSPENDED"){
+                                //TODO: Handle if the match was canceled, postponed or suspended
                             } else {
-                                //Check if something has changed and update the match if necessarry
-                                checkAndUpdateScores.checkAndUpdateScores(apiMatch, resMatch).then(match => {
-                                    console.log("Promise Check And Update Returned:")
-                                }).catch(error => {
-                                    console.log(error)
-                                })
+                                //The match is still live. Update it...
+                                //Send request to the external API
+                                updatePromises.push(getAndUpdateLiveMatch(resMatch))
+                            }
+                        }
+
+                        //begin resolving the promises IF there are some
+                        if (updatePromises.length > 0) {
+                            Promise.all(updatePromises).then(updatedMatches => {
+                                UpdateLogger.logStatus("Live Updater", "Updated some matches")
+                            }).catch(error => {
+                                console.log(error)
+                            })
+                        }
+
+                        if (resolvePredictionPromises.length > 0) {
+                            Promise.all(resolvePredictionPromises).then(updatedPredictions => {
+                                UpdateLogger.logStatus("Live updater", "Updated the predictions")
+                            }).catch(error => {
+                                console.log(error)
+                                UpdateLogger.logStatus("Live updater", "Some error when updating the predictions")
+                            })
+                        }
+
+                        if (finishedMatchesPromises.length > 0) {
+                            Promise.all(finishedMatchesPromises).then(resolvedMatches => {
+                                for (let match of resolvedMatches) {
+                                    deleteFinishedMatch(match).then(deletedMatch => {
+                                        console.log("Match deleted: " + deletedMatch.id)
+                                    }).catch(error => {
+                                        console.log("Error when deleting live match:")
+                                        console.log(error)
+                                        UpdateLogger.logStatus("Live updater", "Error occured when deleting match", error)
+                                    })
+                                }
+                            }).catch(error => {
+                                console.log("Error from resolve finished matches")
+                                console.log(error)
+                                UpdateLogger.logStatus("Live updater", "Error occured when resolving the finished matches", error)
+                            })
+                        }
+
+                        //resolve the promise
+                        resolve("The live updater finished")
+
+
+                    } else {
+                        console.log("No Live Matches")
+                        resolve("No matches found")
+                    }
+                    //all variables to connect with the API
+                
+                }).catch(error => {
+                    console.log("No such match!")
+                    UpdateLogger.logStatus("Live updater", "Error when searching for LiveMatches - first step ", error)
+                    reject(error)
+                })
+
+                //promise for updating match in play. For now, we will only update the result. The scorer is not included in the free plan of the API
+                function getAndUpdateLiveMatch(match) {
+
+                    return new Promise((resolve, reject) => {
+                        //the API options
+                        let urlPath = "/v2/matches/" + resMatch.id
+                        let options = {
+                            host: env.apiRoot,
+                            path: urlPath,
+                            headers: env.headers
+                        }
+                        http.get(options, (response) => {
+                            let data = ''
+                
+                            response.on('error', function() {
+                                UpdateLogger.logStatus("Live updater","Could not get match from the API", error)
+                                reject(error)
+                            })
+                            response.on('data', function (chunk) {
+                                data += chunk
+                            });
+                            response.on('end', function() {
+                                let apiMatch = JSON.parse(data).match
+                                    //Check if something has changed and update the match if necessarry
+                                    checkAndUpdateScores.checkAndUpdateScores(apiMatch, resMatch).then(match => {
+                                        resolve("Match updated:" + match.id)
+                                    }).catch(error => {
+                                        UpdateLogger.logStatus("Live updater", "Error occured when updating the match" + match.id, error)
+                                        reject(error)
+                                    })
+                                
+                            })
+                        })
+                    }) 
+                }
+
+                //promise for finished match
+                function resolvePredictions(match) {
+                    return new Promise((resolve, reject) => {
+                        predictionUpdater.updatePredictions(match).then(updatedPredictions => {
+                            resolve(updatedPredictions)
+                        }).catch(error => {
+                            reject(error)
+                        })
+                    })
+                }
+
+                function resolveFinishedMatch(match) {
+                    return new Promise((resolve, reject) => {
+                        Match.findOneAndUpdate({id: match.id}, {$set: {'status': match.status, 'score': match.score}},(err, updatedMatch) =>{
+                            if(err) {
+                                reject(err)
+                            } else {
+                                resolve(updatedMatch)
                             }
                         })
                     })
-                    
-                } 
-                else {
-                    clearInterval(timer)
-                }    
-            },60000)
-        }).catch(error => {
-            console.log("No such match!")
-        })
-        
+                }
+
+                function deleteFinishedMatch(match) {
+                    return new Promise((resolve, reject) => {
+                        LiveMatch.findOneAndDelete({id: match.id}, (err, res) => {
+                            if(err) {
+                                reject(err)
+                            }
+                            else {
+                                resolve("Match deleted from live matches: " + match.id)
+                            }
+                        })
+                    })
+                }
+
+
+            })
+        }, {timezone: 'Europe/Sofia'})
     },
     
     getAndSaveMatches: function(dateBegin, dateTo) {

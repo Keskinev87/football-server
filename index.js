@@ -14,6 +14,7 @@ let updaters = require('./server/updaters/index')
 updaters.matches.weeklyUpdate()
 updaters.matches.dailyUpdate()
 updaters.matches.matchStartedUpdate()
+updaters.matches.liveUpdate()
 
 require('./server/config/database')(settings)
 require('./server/config/express')(app)
