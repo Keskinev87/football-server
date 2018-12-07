@@ -28,7 +28,7 @@ module.exports = {
                     if(goalsChanged == true) {
                             //update the score and status
                             LiveMatch.findOneAndUpdate({id: apiMatch.id},
-                                {$set: {'score.fullTime': apiMatch.score.fullTime, 'status' : apiMatch.status}},
+                                {$set: {'score.fullTime': apiMatch.score.fullTime, 'status' : apiMatch.status, 'lastUpdated' : apiMatch.lastUpdated}},
                                 {'new': true},
                                 (err, match) => {
                                   if (err) {

@@ -177,14 +177,14 @@ module.exports = {
    matchStartedUpdate: function() {
     //1. Check if a match has begun
     //2. If yes - start an interval (the function updateMatchLive)
-        cron.schedule('50 1-59 * * * *', () => {
+        cron.schedule('50 59 * * * *', () => {
             return new Promise((resolve, reject) => {
                 let loggerName = "Match Start Updater"
                 let curTime = new Date()
                 curTime = curTime.getTime()
                 console.log("Checking if match has began")
     
-                ScheduledMatch.find({dateMiliseconds: {$lt : curTime}, status: {$ne: "FINISHED" || "CANCELED" || "SUSPENDED" || "POSTPONED"}}).then(matches => {
+                ScheduledMatch.find({dateMiliseconds: {$lt : curTime}, status: {$ne: ("FINISHED" || "CANCELED" || "SUSPENDED" || "POSTPONED")}}).then(matches => {
                     if (matches.length > 0) {
                         UpdateLogger.logStatus(loggerName, "Some matches just started...")
                         let promises = []
@@ -214,7 +214,7 @@ module.exports = {
                                 match._id = mongoose.Types.ObjectId();
                                 match.isNew = true
                                 LiveMatch.create(match).then(movedMatch => {
-                                    ScheduledMatch.deleteOne({_id: movedMatch._id}).then(deletedMatch => {
+                                    ScheduledMatch.findOneAndDelete({_id: movedMatch._id}).then(deletedMatch => {
                                         resolve("Match moved: " + deletedMatch)
                                     }).catch(error => {
                                         console.log("Scheduled match removal failed")
@@ -243,7 +243,7 @@ module.exports = {
         //2. Updates the match live until it finishes.
         //3. Whenever the match is finished, stop the interval
         //4. TODO: Manage the canceled/postponed case
-        cron.schedule('50 1-59 * * * *', () => {
+        cron.schedule('48 1-59 * * * *', () => {
             return new Promise((resolve, reject) => {
                 //TODO: add the canceled promises logic
                 LiveMatch.find({}).then(resMatches => {
@@ -258,15 +258,18 @@ module.exports = {
                         for (let resMatch of resMatches) {
                             //check if match has finished. If finished - update the match, update all predictions for this match, delete it from LiveMatches
                             if(resMatch.status === "FINISHED"){
+                                console.log("Should be finished")
                                 //we will fill several arrays with promises here. All of the promises are declared below
                                 resolvePredictionPromises.push(resolvePredictions(resMatch))
                                 finishedMatchesPromises.push(resolveFinishedMatch(resMatch))
                             }
-                            else if(resMatch.status === "CANCELED" || "POSTPONED" || "SUSPENDED"){
+                            else if(resMatch.status == ("CANCELED" || "POSTPONED" || "SUSPENDED")){
+                                console.log("Should be canceled")
                                 //TODO: Handle if the match was canceled, postponed or suspended
                             } else {
                                 //The match is still live. Update it...
                                 //Send request to the external API
+                                console.log("Should be updated")
                                 updatePromises.push(getAndUpdateLiveMatch(resMatch))
                             }
                         }
@@ -291,9 +294,10 @@ module.exports = {
 
                         if (finishedMatchesPromises.length > 0) {
                             Promise.all(finishedMatchesPromises).then(resolvedMatches => {
+                               
                                 for (let match of resolvedMatches) {
                                     deleteFinishedMatch(match).then(deletedMatch => {
-                                        console.log("Match deleted: " + deletedMatch.id)
+                                        console.log("Match deleted: " + deletedMatch)
                                     }).catch(error => {
                                         console.log("Error when deleting live match:")
                                         console.log(error)
@@ -328,7 +332,7 @@ module.exports = {
 
                     return new Promise((resolve, reject) => {
                         //the API options
-                        let urlPath = "/v2/matches/" + resMatch.id
+                        let urlPath = "/v2/matches/" + match.id
                         let options = {
                             host: env.apiRoot,
                             path: urlPath,
@@ -347,8 +351,10 @@ module.exports = {
                             response.on('end', function() {
                                 let apiMatch = JSON.parse(data).match
                                     //Check if something has changed and update the match if necessarry
-                                    checkAndUpdateScores.checkAndUpdateScores(apiMatch, resMatch).then(match => {
-                                        resolve("Match updated:" + match.id)
+                                    checkAndUpdateScores.checkAndUpdateScores(apiMatch, match).then(resMatch => {
+                                        if(resMatch) {
+                                            resolve("Match updated:" + resMatch.id)
+                                        }
                                     }).catch(error => {
                                         UpdateLogger.logStatus("Live updater", "Error occured when updating the match" + match.id, error)
                                         reject(error)
@@ -382,14 +388,15 @@ module.exports = {
                     })
                 }
 
-                function deleteFinishedMatch(match) {
+                function deleteFinishedMatch(inputMatch) {
                     return new Promise((resolve, reject) => {
-                        LiveMatch.findOneAndDelete({id: match.id}, (err, res) => {
+                        console.log("Deleting: " + inputMatch.id)
+                        LiveMatch.findOneAndDelete({id: inputMatch.id}, (err, res) => {
                             if(err) {
                                 reject(err)
                             }
                             else {
-                                resolve("Match deleted from live matches: " + match.id)
+                                resolve(inputMatch.id)
                             }
                         })
                     })
