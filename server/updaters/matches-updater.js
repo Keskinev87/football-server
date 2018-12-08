@@ -106,7 +106,7 @@ module.exports = {
         //1. At the beginning of the day, check all matches that are scheduled for the same day,
         //2. Save their id and date in a separate collection in the database,
         //3. If there are any matches for the day, start a scheduled task to check if the match has begun.
-        cron.schedule('15 24 0 * * *', () => {
+        cron.schedule('10 8 19 * * *', () => {
             return new Promise((resolve, reject) => {
                 let today = new Date()
                 today = today.getTime()
