@@ -81,7 +81,7 @@ module.exports = {
 
     let user = req.user
 
-    res.status(200).json(user)
+    res.status(200).json(user) 
 
   },
   logout: (req, res) => {
