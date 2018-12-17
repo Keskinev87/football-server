@@ -78,10 +78,13 @@ module.exports = {
      
   },
   getUser: (req, res) => {
-
-    let user = req.user
-
-    res.status(200).json(user) 
+    if(req.user === undefined) {
+      res.status(404).json({error: "No such user exists"})
+    } else {
+      let user = req.user
+      res.status(200).json(user) 
+    }
+    
 
   },
   logout: (req, res) => {

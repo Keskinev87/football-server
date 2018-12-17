@@ -17,7 +17,7 @@ module.exports = {
        Prediction.create(prediction).then((resPrediction) => {
            res.status(200).json(resPrediction)
        }).catch(error => {
-           res.status(500).json({error: "Prediction could not be saved"})
+           res.status(500).json({error: error})
        })
     },
     evaluatePredictionsForMatches: (req, res) => {
