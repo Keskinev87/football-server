@@ -6,7 +6,7 @@ let matchSchema = new mongoose.Schema({
     season: { type: Object, required: true },
     utcDate: { type: Date, required: true},
     status: { type: String, required: true},
-    matchday: { type: Number, required: true},
+    matchday: { type: Number, required: false},
     stage: { type: String, required: true},
     group: { type: String, required: false},
     lastUpdated: { type: Date, required: true},
